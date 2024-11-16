@@ -1,4 +1,4 @@
-# Simplex Calculator - JavaFx Application
+# Simplex Calculator - JavaFX Application
 #### This is a practical project of the software engineering course of the College of Computer Science of Sichuan University.
 
 ## Introduction
@@ -12,8 +12,6 @@ The application is built using **JavaFX**, providing an interactive graphical us
 - **Linear Programming Solver**: Solve LP problems involving multiple constraints and objective functions.
 - **Simplex Algorithm Implementation**: The core algorithm that helps in efficiently finding the optimal solution to linear programming problems.
 - **Interactive GUI**: User-friendly interface with input fields for constraints, objective function, and other parameters.
-- **Real-time Visualization**: The app displays the steps of the Simplex Algorithm and the graphical representation of the feasible region.
-- **Step-by-Step Execution**: Allows users to view each iteration of the Simplex method for better understanding.
 - **Result Display**: Once the algorithm converges, the application shows the optimal solution and its corresponding objective function value.
 
 ## Requirements
@@ -57,10 +55,11 @@ $z=3x+2y$
 Subject to:
 $$
 \begin{cases}
-x+y\leq4 \\
-2x+y\leq5
+x+y &\leq 4 \\
+2x+y &\leq 5
 \end{cases}
 $$
+
 
 ### Steps:
 1. Enter the number of variables and constraint functions 2 and 2 in the text input.
