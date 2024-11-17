@@ -1,21 +1,28 @@
 // Controller/AppController.java
 package com.scuse.controller;
 
+import com.scuse.App;
 import com.scuse.model.ConstraintEquation;
 import com.scuse.model.MathModel;
 import com.scuse.model.ObjectiveFunction;
 import com.scuse.view.AppView;
+import javafx.scene.Node;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-
 import javafx.scene.control.TextInputDialog;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,7 +72,7 @@ public class AppController {
     }
 
     private void handleOpenAction() {
-
+        loadJsonFile();
     }
 
     private void handleSaveAction() {
@@ -73,6 +80,7 @@ public class AppController {
         dialog.setTitle("Save File");
         dialog.setHeaderText("Save your model data");
         dialog.setContentText("Enter a file name:");
+        dialog.getEditor().appendText("data.json");
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(fileName -> {
             try {
@@ -89,8 +97,8 @@ public class AppController {
     }
 
     private void handleAboutAction() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, "This is a Simplex Solver GUI.", ButtonType.OK);
-        alert.showAndWait();
+        Alert aboutAlert = AppView.getAlertInstance(Alert.AlertType.INFORMATION, "About", "This is a Simplex Solver GUI.");
+        aboutAlert.showAndWait();
     }
 
     private void clear() {
@@ -102,6 +110,10 @@ public class AppController {
     private void saveDataToJson(String fileName) throws IOException {
         // 创建 JSON 对象
         JSONObject data = new JSONObject();
+
+        // 保存变量和方程个数
+        data.put("numVariables", numVariables);
+        data.put("numConstraints", numConstraints);
 
         // 保存目标方程
         JSONObject objectiveFunction = new JSONObject();
@@ -122,9 +134,110 @@ public class AppController {
         data.put("constraints", constraints);
 
         // 将 JSON 数据写入文件
-        try (FileWriter writer = new FileWriter(fileName)) {
+        try (FileWriter writer = new FileWriter(fileName.contains(".json") ? fileName : fileName + ".json")) {
             writer.write(data.toString(4)); // 格式化缩进为 4 个空格
         }
+    }
+
+    private void loadJsonFile() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open JSON File");
+        fileChooser.setInitialDirectory(new java.io.File("."));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
+
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            try (FileReader reader = new FileReader(file)) {
+                // 解析 JSON 数据
+                JSONTokener tokener = new JSONTokener(reader);
+                JSONObject data = new JSONObject(tokener);
+
+                // 解析变量和方程个数
+                numVariables = data.getInt("numVariables");
+                numConstraints = data.getInt("numConstraints");
+
+                // 解析目标方程
+                JSONObject objectiveFunctionObj = data.getJSONObject("objectiveFunction");
+                List<Double> objCoefficients = new ArrayList<>();
+                JSONArray coeffArray = objectiveFunctionObj.getJSONArray("coefficients");
+                for (int i = 0; i < coeffArray.length(); i++) {
+                    objCoefficients.add(coeffArray.getDouble(i));
+                }
+                mathModel.getObjectiveFunction().setCoefficients(objCoefficients);
+                mathModel.getObjectiveFunction().setOptimizationType(objectiveFunctionObj.getString("optimization"));
+
+                // 解析约束方程
+                JSONArray constraintsArray = data.getJSONArray("constraints");
+                mathModel.getConstraints().clear();
+                for (int i = 0; i < constraintsArray.length(); i++) {
+                    JSONObject constraintObj = constraintsArray.getJSONObject(i);
+                    List<Double> constraintCoefficients = new ArrayList<>();
+                    JSONArray constraintCoeffArray = constraintObj.getJSONArray("coefficients");
+                    for (int j = 0; j < constraintCoeffArray.length(); j++) {
+                        constraintCoefficients.add(constraintCoeffArray.getDouble(j));
+                    }
+
+                    ConstraintEquation constraint = new ConstraintEquation();
+                    constraint.setCoefficients(constraintCoefficients);
+                    constraint.setSign(constraintObj.getString("symbol"));
+                    constraint.setConstant(constraintObj.getDouble("constant"));
+
+                    mathModel.addConstraint(constraint);
+                }
+
+                // 更新视图
+                updateViewFromModel();
+                Alert alert = AppView.getAlertInstance(Alert.AlertType.INFORMATION, "Success", "Data loaded successfully.");
+                alert.showAndWait();
+            } catch (Exception e) {
+                Alert alert = AppView.getAlertInstance(Alert.AlertType.ERROR, "Error", "Failed to load data: " + e.getMessage());
+                alert.showAndWait();
+            }
+        }
+    }
+
+    private void updateViewFromModel() {
+        view.getEquationsBox().getChildren().clear();
+
+        // 更新变量个数
+        view.getVariablesTextField().setText(String.valueOf(numVariables));
+
+        // 更新约束个数
+        view.getConstraintsTextField().setText(String.valueOf(numConstraints));
+        // 更新约束方程
+        Label constraintLabel = new Label("Constraint Functions:");
+        view.getEquationsBox().getChildren().add(constraintLabel);
+        for (ConstraintEquation constraint : mathModel.getConstraints()) {
+            HBox equationBox = new HBox(10);
+
+            for (Double coefficient : constraint.getCoefficients()) {
+                TextField coefficientField = new TextField(coefficient.toString());
+                equationBox.getChildren().add(coefficientField);
+            }
+
+            ComboBox<String> symbolBox = new ComboBox<>();
+            symbolBox.getItems().addAll("<=", ">=", "=");
+            symbolBox.setValue(constraint.getSign());
+            equationBox.getChildren().add(symbolBox);
+
+            TextField constantField = new TextField(String.valueOf(constraint.getConstant()));
+            equationBox.getChildren().add(constantField);
+
+            view.getEquationsBox().getChildren().add(equationBox);
+        }
+
+        // 更新目标方程
+        HBox objectiveFunctionBox = new HBox(10);
+        Label objectiveLabel = new Label("Objective Function:");
+        objectiveFunctionBox.getChildren().add(objectiveLabel);
+        for (Double coefficient : mathModel.getObjectiveFunction().getCoefficients()) {
+            TextField coefficientField = new TextField(coefficient.toString());
+            objectiveFunctionBox.getChildren().add(coefficientField);
+        }
+        view.getEquationsBox().getChildren().add(objectiveFunctionBox);
+
+        // 更新优化类型
+        view.getOptimizationChoiceBox().setValue(mathModel.getObjectiveFunction().getOptimizationType());
     }
 
     private void updateEquations(Stage primaryStage) {
@@ -178,7 +291,7 @@ public class AppController {
             primaryStage.setWidth(newWidth);
             primaryStage.setHeight(newHeight);
         } catch (NumberFormatException e){
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter valid numbers for variables and constraints.", ButtonType.OK);
+            Alert alert = AppView.getAlertInstance(Alert.AlertType.ERROR, "Error", "Invalid input: " + e.getMessage());
             alert.showAndWait();
         }
     }
@@ -202,9 +315,17 @@ public class AppController {
                     }
                 }
 
-                ComboBox<String> signComboBox = (ComboBox<String>) equationBox.getChildren().get(numVariables);
-                String sign = signComboBox.getValue();
-                constraint.setSign(sign);
+                Node node = equationBox.getChildren().get(numVariables);
+                String sign;
+                if (node instanceof ComboBox<?>) {
+                    @SuppressWarnings("unchecked")
+                    ComboBox<String> signComboBox = (ComboBox<String>) node;
+                    sign = signComboBox.getValue();
+                    constraint.setSign(sign);
+                } else {
+                    throw new ClassCastException("Expected ComboBox<String> but got " + node.getClass().getName());
+                }
+
                 // 获取常数项
                 TextField constantField = (TextField) equationBox.getChildren().get(numVariables + 1);
                 String constant = constantField.getText();
@@ -240,7 +361,7 @@ public class AppController {
             mathModel.setObjectiveFunction(objectiveFunction);
         } catch (Exception e) {
             // 错误处理
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error in input data. Please check your inputs.", ButtonType.OK);
+            Alert alert = AppView.getAlertInstance(Alert.AlertType.ERROR, "Error", "Invalid input: " + e.getMessage());
             alert.showAndWait();
         }
     }

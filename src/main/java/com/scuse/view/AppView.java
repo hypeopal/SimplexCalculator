@@ -15,6 +15,7 @@ public class AppView {
     private ComboBox<String> optimizationChoiceBox;
     private Button updateButton;
     private Button solveButton;
+    private static Alert alert;
 
     public AppView(Stage primaryStage) {
         primaryStage.setTitle("Simplex Calculator");
@@ -121,5 +122,15 @@ public class AppView {
 
     public MenuBar getMenuBar() {
         return menuBar;
+    }
+
+    public static Alert getAlertInstance(Alert.AlertType alertType, String title, String content) {
+        if (alert == null) {
+            alert = new Alert(alertType);
+        }
+        alert.setAlertType(alertType);
+        alert.setTitle(title);
+        alert.setContentText(content);
+        return alert;
     }
 }

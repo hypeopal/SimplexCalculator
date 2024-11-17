@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ObjectiveFunction {
-    private List<Double> coefficients;
+    private final List<Double> coefficients;
     private String optimizationType;
 
     public ObjectiveFunction() {
@@ -26,5 +26,10 @@ public class ObjectiveFunction {
     public void clear() {
         coefficients.clear();
         optimizationType = "";
+    }
+
+    public void setCoefficients(List<Double> objCoefficients) {
+        coefficients.clear();
+        coefficients.addAll(objCoefficients);
     }
 }

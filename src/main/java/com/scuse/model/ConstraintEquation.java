@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConstraintEquation {
-    private List<Double> coefficients;
+    private final List<Double> coefficients;
     private String sign;
     private double constant;
 
@@ -30,5 +30,10 @@ public class ConstraintEquation {
 
     public void setConstant(double constant) {
         this.constant = constant;
+    }
+
+    public void setCoefficients(List<Double> constraintCoefficients) {
+        coefficients.clear();
+        coefficients.addAll(constraintCoefficients);
     }
 }
