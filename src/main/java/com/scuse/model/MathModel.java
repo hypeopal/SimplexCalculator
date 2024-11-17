@@ -6,10 +6,12 @@ import java.util.List;
 public class MathModel {
     private ObjectiveFunction objectiveFunction;
     private final List<ConstraintEquation> constraints;
+    private LPQ lpq;
 
     public MathModel() {
         objectiveFunction = new ObjectiveFunction();
         constraints = new ArrayList<>();
+        lpq = new LPQ();
     }
 
     public ObjectiveFunction getObjectiveFunction() {

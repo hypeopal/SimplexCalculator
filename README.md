@@ -53,6 +53,7 @@ Maximize:
 $z=3x+2y$
 
 Subject to:
+
 $$
 \begin{cases}
 x+y &\leq 4 \\

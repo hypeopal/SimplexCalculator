@@ -1,4 +1,3 @@
-// Controller/AppController.java
 package com.scuse.controller;
 
 import com.scuse.App;
@@ -46,7 +45,7 @@ public class AppController {
                         item.setOnAction(_ -> handleNewAction());
                         break;
                     case "Open":
-                        item.setOnAction(_ -> handleOpenAction());
+                        item.setOnAction(_ -> handleOpenAction(primaryStage));
                         break;
                     case "Save":
                         item.setOnAction(_ -> handleSaveAction());
@@ -71,8 +70,9 @@ public class AppController {
         view.getConstraintsTextField().clear();
     }
 
-    private void handleOpenAction() {
+    private void handleOpenAction(Stage primaryStage) {
         loadJsonFile();
+        resize(primaryStage);
     }
 
     private void handleSaveAction() {
@@ -97,7 +97,7 @@ public class AppController {
     }
 
     private void handleAboutAction() {
-        Alert aboutAlert = AppView.getAlertInstance(Alert.AlertType.INFORMATION, "About", "This is a Simplex Solver GUI.");
+        Alert aboutAlert = AppView.getAlertInstance(Alert.AlertType.INFORMATION, "About", "Simplex Calculator", "This is a Simplex Calculator GUI.");
         aboutAlert.showAndWait();
     }
 
@@ -187,10 +187,10 @@ public class AppController {
 
                 // 更新视图
                 updateViewFromModel();
-                Alert alert = AppView.getAlertInstance(Alert.AlertType.INFORMATION, "Success", "Data loaded successfully.");
+                Alert alert = AppView.getAlertInstance(Alert.AlertType.INFORMATION, "Success", "Opened file", "Data loaded successfully.");
                 alert.showAndWait();
             } catch (Exception e) {
-                Alert alert = AppView.getAlertInstance(Alert.AlertType.ERROR, "Error", "Failed to load data: " + e.getMessage());
+                Alert alert = AppView.getAlertInstance(Alert.AlertType.ERROR, "Error", "Open file failed", "Failed to load data: " + e.getMessage());
                 alert.showAndWait();
             }
         }
@@ -205,7 +205,7 @@ public class AppController {
         // 更新约束个数
         view.getConstraintsTextField().setText(String.valueOf(numConstraints));
         // 更新约束方程
-        Label constraintLabel = new Label("Constraint Functions:");
+        Label constraintLabel = new Label("Constraint Functions(Please input coefficients in order):");
         view.getEquationsBox().getChildren().add(constraintLabel);
         for (ConstraintEquation constraint : mathModel.getConstraints()) {
             HBox equationBox = new HBox(10);
@@ -227,14 +227,14 @@ public class AppController {
         }
 
         // 更新目标方程
-        HBox objectiveFunctionBox = new HBox(10);
         Label objectiveLabel = new Label("Objective Function:");
-        objectiveFunctionBox.getChildren().add(objectiveLabel);
+        view.getEquationsBox().getChildren().add(objectiveLabel);
+        HBox objectiveFunctionInputBox = new HBox(10);
         for (Double coefficient : mathModel.getObjectiveFunction().getCoefficients()) {
             TextField coefficientField = new TextField(coefficient.toString());
-            objectiveFunctionBox.getChildren().add(coefficientField);
+            objectiveFunctionInputBox.getChildren().add(coefficientField);
         }
-        view.getEquationsBox().getChildren().add(objectiveFunctionBox);
+        view.getEquationsBox().getChildren().add(objectiveFunctionInputBox);
 
         // 更新优化类型
         view.getOptimizationChoiceBox().setValue(mathModel.getObjectiveFunction().getOptimizationType());
@@ -246,7 +246,7 @@ public class AppController {
         try {
             numVariables = Integer.parseInt(view.getVariablesTextField().getText());
             numConstraints = Integer.parseInt(view.getConstraintsTextField().getText());
-            Label constraintLabel = new Label("Constraint Functions:");
+            Label constraintLabel = new Label("Constraint Functions(Please input coefficients in order):");
             view.getEquationsBox().getChildren().add(constraintLabel);
             // 生成约束方程输入框
             for (int i = 0; i < numConstraints; i++) {
@@ -285,13 +285,9 @@ public class AppController {
             }
             view.getEquationsBox().getChildren().add(objectiveFunctionInputBox);
 
-            // 动态调整窗口大小
-            double newWidth = Math.max(600, 200 + numVariables * 82);
-            double newHeight = Math.max(400, 265 + numConstraints * 60);
-            primaryStage.setWidth(newWidth);
-            primaryStage.setHeight(newHeight);
+            resize(primaryStage);
         } catch (NumberFormatException e){
-            Alert alert = AppView.getAlertInstance(Alert.AlertType.ERROR, "Error", "Invalid input: " + e.getMessage());
+            Alert alert = AppView.getAlertInstance(Alert.AlertType.ERROR, "Error", "Input Error", "Invalid input: " + e.getMessage());
             alert.showAndWait();
         }
     }
@@ -361,9 +357,17 @@ public class AppController {
             mathModel.setObjectiveFunction(objectiveFunction);
         } catch (Exception e) {
             // 错误处理
-            Alert alert = AppView.getAlertInstance(Alert.AlertType.ERROR, "Error", "Invalid input: " + e.getMessage());
+            Alert alert = AppView.getAlertInstance(Alert.AlertType.ERROR, "Error", "Input Error", "Invalid input: " + e.getMessage());
             alert.showAndWait();
         }
+    }
+
+    private void resize(Stage primaryStage) {
+        // 动态调整窗口大小
+        double newWidth = Math.max(600, 200 + numVariables * 82);
+        double newHeight = Math.max(400, 265 + numConstraints * 60);
+        primaryStage.setWidth(newWidth);
+        primaryStage.setHeight(newHeight);
     }
 
     private void solve() {

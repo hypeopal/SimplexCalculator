@@ -124,12 +124,13 @@ public class AppView {
         return menuBar;
     }
 
-    public static Alert getAlertInstance(Alert.AlertType alertType, String title, String content) {
+    public static Alert getAlertInstance(Alert.AlertType alertType, String title, String header, String content) {
         if (alert == null) {
             alert = new Alert(alertType);
         }
         alert.setAlertType(alertType);
         alert.setTitle(title);
+        alert.setHeaderText(header);
         alert.setContentText(content);
         return alert;
     }
