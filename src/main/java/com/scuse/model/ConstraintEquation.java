@@ -12,6 +12,12 @@ public class ConstraintEquation {
         coefficients = new ArrayList<>();
     }
 
+    public ConstraintEquation(List<Double> coefficients, double constant, String sign) {
+        this.coefficients = coefficients;
+        this.constant = constant;
+        this.sign = sign;
+    }
+
     public List<Double> getCoefficients() {
         return coefficients;
     }

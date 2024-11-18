@@ -4,11 +4,14 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class AppView {
     private final VBox equationsBox;
+    private VBox resultsBox;
     private final MenuBar menuBar;
     private TextField variablesTextField;
     private TextField constraintsTextField;
@@ -36,6 +39,11 @@ public class AppView {
         equationsBox = new VBox(10);
         equationsBox.setPadding(new Insets(10));
         topBox.getChildren().add(equationsBox);
+
+        resultsBox = new VBox(10);
+        resultsBox.setPadding(new Insets(10));
+        resultsBox.setAlignment(Pos.CENTER);
+        topBox.getChildren().add(resultsBox);
         mainLayout.setCenter(topBox);
 
         HBox bottomBox = createBottomBox();
@@ -122,6 +130,10 @@ public class AppView {
 
     public MenuBar getMenuBar() {
         return menuBar;
+    }
+
+    public VBox getResultsBox() {
+        return resultsBox;
     }
 
     public static Alert getAlertInstance(Alert.AlertType alertType, String title, String header, String content) {

@@ -1,9 +1,6 @@
 package com.scuse.controller;
 
-import com.scuse.App;
-import com.scuse.model.ConstraintEquation;
-import com.scuse.model.MathModel;
-import com.scuse.model.ObjectiveFunction;
+import com.scuse.model.*;
 import com.scuse.view.AppView;
 import javafx.scene.Node;
 import javafx.stage.FileChooser;
@@ -36,13 +33,13 @@ public class AppController {
         mathModel = new MathModel();
 
         view.getUpdateButton().setOnAction(_ -> updateEquations(primaryStage));
-        view.getSolveButton().setOnAction(_ -> solve());
+        view.getSolveButton().setOnAction(_ -> solve(primaryStage));
 
         for (Menu menu : view.getMenuBar().getMenus()) {
             for (MenuItem item : menu.getItems()) {
                 switch (item.getText()) {
                     case "New":
-                        item.setOnAction(_ -> handleNewAction());
+                        item.setOnAction(_ -> handleNewAction(primaryStage));
                         break;
                     case "Open":
                         item.setOnAction(_ -> handleOpenAction(primaryStage));
@@ -64,13 +61,15 @@ public class AppController {
         }
     }
 
-    private void handleNewAction() {
+    private void handleNewAction(Stage primaryStage) {
         clear();
         view.getVariablesTextField().clear();
         view.getConstraintsTextField().clear();
+        resize(primaryStage);
     }
 
     private void handleOpenAction(Stage primaryStage) {
+        clear();
         loadJsonFile();
         resize(primaryStage);
     }
@@ -103,8 +102,10 @@ public class AppController {
 
     private void clear() {
         view.getEquationsBox().getChildren().clear();
+        view.getResultsBox().getChildren().clear();
         mathModel.getConstraints().clear();
         mathModel.getObjectiveFunction().clear();
+        mathModel.getLPQ().getSolutions().clear();
     }
 
     private void saveDataToJson(String fileName) throws IOException {
@@ -132,6 +133,16 @@ public class AppController {
             constraints.put(constraintObj);
         }
         data.put("constraints", constraints);
+
+        // 保存解
+        JSONArray solutions = new JSONArray();
+        for (Solution solution : mathModel.getLPQ().getSolutions()) {
+            JSONObject solutionObj = new JSONObject();
+            solutionObj.put("Variables", solution.getVariableValues());
+            solutionObj.put("objectiveValue", solution.getObjectiveValue());
+            solutions.put(solutionObj);
+        }
+        data.put("solutions", solutions);
 
         // 将 JSON 数据写入文件
         try (FileWriter writer = new FileWriter(fileName.contains(".json") ? fileName : fileName + ".json")) {
@@ -185,6 +196,19 @@ public class AppController {
                     mathModel.addConstraint(constraint);
                 }
 
+                // 解析解
+                JSONArray solutionsArray = data.getJSONArray("solutions");
+                mathModel.getLPQ().getSolutions().clear();
+                for (int i = 0; i < solutionsArray.length(); i++) {
+                    JSONObject solutionObj = solutionsArray.getJSONObject(i);
+                    List<Double> variableValues = new ArrayList<>();
+                    JSONArray variableValuesArray = solutionObj.getJSONArray("Variables");
+                    for (int j = 0; j < variableValuesArray.length(); j++) {
+                        variableValues.add(variableValuesArray.getDouble(j));
+                    }
+                    mathModel.getLPQ().addSolution(Double.valueOf(solutionObj.getDouble("objectiveValue")), variableValues);
+                }
+
                 // 更新视图
                 updateViewFromModel();
                 Alert alert = AppView.getAlertInstance(Alert.AlertType.INFORMATION, "Success", "Opened file", "Data loaded successfully.");
@@ -201,7 +225,6 @@ public class AppController {
 
         // 更新变量个数
         view.getVariablesTextField().setText(String.valueOf(numVariables));
-
         // 更新约束个数
         view.getConstraintsTextField().setText(String.valueOf(numConstraints));
         // 更新约束方程
@@ -235,6 +258,8 @@ public class AppController {
             objectiveFunctionInputBox.getChildren().add(coefficientField);
         }
         view.getEquationsBox().getChildren().add(objectiveFunctionInputBox);
+        // 更新解集
+        updateResults();
 
         // 更新优化类型
         view.getOptimizationChoiceBox().setValue(mathModel.getObjectiveFunction().getOptimizationType());
@@ -362,16 +387,28 @@ public class AppController {
         }
     }
 
+    private void updateResults() {
+        view.getResultsBox().getChildren().clear();
+
+        Label solutionLabel = new Label(mathModel.getLPQ().toString());
+        solutionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        view.getResultsBox().getChildren().add(solutionLabel);
+    }
+
     private void resize(Stage primaryStage) {
         // 动态调整窗口大小
         double newWidth = Math.max(600, 200 + numVariables * 82);
-        double newHeight = Math.max(400, 265 + numConstraints * 60);
+        double newHeight = Math.max(400, 310 + numConstraints * 60 + mathModel.getLPQ().getSolutions().size() * 60);
         primaryStage.setWidth(newWidth);
         primaryStage.setHeight(newHeight);
     }
 
-    private void solve() {
+    private void solve(Stage primaryStage) {
         extractCoefficient();
-        mathModel.print();
+        mathModel.printFunction();
+        mathModel.solve();
+        mathModel.printSolution();
+        updateResults();
+        resize(primaryStage);
     }
 }
