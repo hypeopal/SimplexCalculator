@@ -10,7 +10,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class AppView {
-    private final VBox equationsBox;
+    private final VBox constraintsBox;
+    private final VBox objectiveBox;
     private VBox resultsBox;
     private final MenuBar menuBar;
     private TextField variablesTextField;
@@ -36,9 +37,13 @@ public class AppView {
         HBox inputBox = createInputBox();
         topBox.getChildren().addAll(inputBox, updateButton);
 
-        equationsBox = new VBox(10);
-        equationsBox.setPadding(new Insets(10));
-        topBox.getChildren().add(equationsBox);
+        constraintsBox = new VBox(10);
+        constraintsBox.setPadding(new Insets(10));
+        topBox.getChildren().add(constraintsBox);
+
+        objectiveBox = new VBox(10);
+        objectiveBox.setPadding(new Insets(10));
+        topBox.getChildren().add(objectiveBox);
 
         resultsBox = new VBox(10);
         resultsBox.setPadding(new Insets(10));
@@ -104,8 +109,8 @@ public class AppView {
         return bottomBox;
     }
 
-    public VBox getEquationsBox() {
-        return equationsBox;
+    public VBox getConstraintsBox() {
+        return constraintsBox;
     }
 
     public TextField getVariablesTextField() {
@@ -134,6 +139,10 @@ public class AppView {
 
     public VBox getResultsBox() {
         return resultsBox;
+    }
+
+    public VBox getObjectiveBox() {
+        return objectiveBox;
     }
 
     public static Alert getAlertInstance(Alert.AlertType alertType, String title, String header, String content) {

@@ -15,6 +15,10 @@ public class LPQ {
         return solutions;
     }
 
+    public void clear() {
+        solutions.clear();
+    }
+
     public void addSolution(double objectiveValue, List<Double> variableValues) {
         solutions.add(new Solution(objectiveValue, variableValues));
     }
