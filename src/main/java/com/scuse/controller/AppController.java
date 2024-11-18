@@ -3,6 +3,7 @@ package com.scuse.controller;
 import com.scuse.model.*;
 import com.scuse.view.AppView;
 import javafx.scene.Node;
+import javafx.geometry.Pos;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
@@ -92,7 +93,63 @@ public class AppController {
     }
 
     private void handleFeedbackAction() {
+        // 创建对话框
+        Dialog<Void> feedbackDialog = new Dialog<>();
+        feedbackDialog.setTitle("Feedback");
+        feedbackDialog.setHeaderText("Submit Your Feedback");
 
+        // 问题类型选择
+        VBox feedbackContent = new VBox(10);
+        feedbackContent.setPadding(new Insets(10));
+        feedbackContent.setAlignment(Pos.CENTER_LEFT);
+
+        Label issueTypeLabel = new Label("Select Issue Type:");
+        CheckBox uiIssueCheckBox = new CheckBox("UI Issue");
+        CheckBox functionalityIssueCheckBox = new CheckBox("Functionality Issue");
+        CheckBox performanceIssueCheckBox = new CheckBox("Performance Issue");
+        CheckBox otherIssueCheckBox = new CheckBox("Other");
+
+        VBox issueTypeBox = new VBox(5, uiIssueCheckBox, functionalityIssueCheckBox, performanceIssueCheckBox, otherIssueCheckBox);
+
+        // 问题详情输入框
+        Label issueDetailsLabel = new Label("Issue Details:");
+        TextArea issueDetailsTextArea = new TextArea();
+        issueDetailsTextArea.setPromptText("Describe your issue here...");
+        issueDetailsTextArea.setPrefHeight(150);
+
+        feedbackContent.getChildren().addAll(issueTypeLabel, issueTypeBox, issueDetailsLabel, issueDetailsTextArea);
+
+        // 添加按钮
+        ButtonType submitButtonType = new ButtonType("Submit", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButtonType = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        feedbackDialog.getDialogPane().getButtonTypes().addAll(submitButtonType, cancelButtonType);
+
+        feedbackDialog.getDialogPane().setContent(feedbackContent);
+
+        // 设置提交按钮操作
+        feedbackDialog.setResultConverter(dialogButton -> {
+            if (dialogButton == submitButtonType) {
+                // 收集用户反馈数据
+                StringBuilder feedbackSummary = new StringBuilder("Feedback Submitted:\n");
+
+                if (uiIssueCheckBox.isSelected()) feedbackSummary.append("- UI Issue\n");
+                if (functionalityIssueCheckBox.isSelected()) feedbackSummary.append("- Functionality Issue\n");
+                if (performanceIssueCheckBox.isSelected()) feedbackSummary.append("- Performance Issue\n");
+                if (otherIssueCheckBox.isSelected()) feedbackSummary.append("- Other Issue\n");
+
+                feedbackSummary.append("Details:\n").append(issueDetailsTextArea.getText().trim());
+
+                // 模拟提交或保存反馈
+                System.out.println(feedbackSummary);
+
+                Alert alert = AppView.getAlertInstance(Alert.AlertType.INFORMATION, "Feedback Submitted", "Thank you for your feedback!", feedbackSummary.toString());
+                alert.showAndWait();
+            }
+            return null;
+        });
+
+        // 显示对话框
+        feedbackDialog.showAndWait();
     }
 
     private void handleAboutAction() {
@@ -146,7 +203,7 @@ public class AppController {
 
         // 将 JSON 数据写入文件
         try (FileWriter writer = new FileWriter(fileName.contains(".json") ? fileName : fileName + ".json")) {
-            writer.write(data.toString(4)); // 格式化缩进为 4 个空格
+            writer.write(data.toString(2)); // 格式化缩进为 2 个空格
         }
     }
 
@@ -206,7 +263,7 @@ public class AppController {
                     for (int j = 0; j < variableValuesArray.length(); j++) {
                         variableValues.add(variableValuesArray.getDouble(j));
                     }
-                    mathModel.getLPQ().addSolution(Double.valueOf(solutionObj.getDouble("objectiveValue")), variableValues);
+                    mathModel.getLPQ().addSolution(solutionObj.getDouble("objectiveValue"), variableValues);
                 }
 
                 // 更新视图
@@ -398,7 +455,7 @@ public class AppController {
     private void resize(Stage primaryStage) {
         // 动态调整窗口大小
         double newWidth = Math.max(600, 200 + numVariables * 82);
-        double newHeight = Math.max(400, 310 + numConstraints * 60 + mathModel.getLPQ().getSolutions().size() * 60);
+        double newHeight = Math.max(400, 310 + numConstraints * 60 + mathModel.getLPQ().getSolutions().size() * 40);
         primaryStage.setWidth(newWidth);
         primaryStage.setHeight(newHeight);
     }

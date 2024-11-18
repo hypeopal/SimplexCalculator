@@ -43,9 +43,6 @@ To run the application, the following are required:
     - After the algorithm completes, the optimal solution (if one exists) will be displayed, showing the values of the decision variables and the corresponding optimal objective value.
     - Graphical representation of the feasible region and optimal solution will be shown (for two-variable problems).
 
-4. **Step-by-Step Navigation**:
-    - If you want to explore each iteration, use the **Next Step** button to navigate through the algorithm’s steps.
-
 ## Example
 
 ### Linear Programming Problem:
