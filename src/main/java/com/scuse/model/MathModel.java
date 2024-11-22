@@ -34,21 +34,23 @@ public class MathModel {
         return lpq;
     }
 
+    public void clear() {
+        objectiveFunction.clear();
+        constraints.clear();
+        lpq.getSolutions().clear();
+    }
+
     public void solve() {
         int numVariables = objectiveFunction.getCoefficients().size();
         int numConstraints = constraints.size();
+        boolean isMaximize = objectiveFunction.getOptimizationType().equals("Maximize");
+        int flag = isMaximize ? -1 : 1;
 
         // 创建单纯形表
         int rows = numConstraints + 1; // 包含目标函数行
         int cols = numVariables + numConstraints + 1; // 包含松弛变量和常数列
 
         double[][] tableau = new double[rows][cols];
-
-        // 填充目标函数行
-        for (int i = 0; i < numVariables; i++) {
-            tableau[0][i] = -objectiveFunction.getCoefficients().get(i); // 最大化转换为最小化
-        }
-
 
         // 填充约束方程
         for (int i = 0; i < numConstraints; i++) {
@@ -64,6 +66,7 @@ public class MathModel {
             tableau[i + 1][numVariables + numConstraints] = constraint.getConstant();
             for (int j = 0; j < numVariables; j++) {
                 tableau[i + 1][j] = constraint.getCoefficients().get(j);
+                tableau[0][j] = flag * objectiveFunction.getCoefficients().get(j);
             }
             // 根据约束符号处理松弛变量
             switch (constraint.getSign()) {
@@ -86,15 +89,20 @@ public class MathModel {
         while (true) {
             // 找到主列 (pivot column)
             int pivotCol = -1;
-            double minValue = 0;
+            double extremumValue = isMaximize ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
+
             for (int j = 0; j < cols - 1; j++) {
-                if (tableau[0][j] < minValue) {
-                    minValue = tableau[0][j];
+                if (isMaximize && tableau[0][j] < extremumValue) {
+                    extremumValue = tableau[0][j];
+                    pivotCol = j;
+                } else if (!isMaximize && tableau[0][j] > extremumValue) {
+                    extremumValue = tableau[0][j];
                     pivotCol = j;
                 }
             }
-            if (pivotCol == -1) {
-                // 所有系数均为非负，当前解为最优解
+
+            if ((isMaximize && extremumValue >= 0) || (!isMaximize && extremumValue <= 0)) {
+                // 已经达到最优解
                 break;
             }
 
@@ -111,6 +119,7 @@ public class MathModel {
                 }
             }
             if (pivotRow == -1) {
+                System.out.println("Unbounded solution");
                 throw new IllegalArgumentException("Unbounded solution");
             }
 
@@ -129,6 +138,18 @@ public class MathModel {
                     }
                 }
             }
+        }
+
+        boolean isFeasible = true;
+        for (int i = 1; i <= numConstraints; i++) {
+            if (tableau[i][numConstraints + numVariables] < 0) {
+                isFeasible = false;
+                break;
+            }
+        }
+        if (!isFeasible) {
+            System.out.println("Feasible solution");
+            throw new IllegalArgumentException("Infeasible solution");
         }
 
         // 提取解

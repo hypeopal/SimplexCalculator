@@ -292,6 +292,7 @@ public class AppController {
         view.getConstraintsBox().getChildren().add(constraintLabel);
         for (ConstraintEquation constraint : mathModel.getConstraints()) {
             HBox equationBox = new HBox(10);
+            equationBox.setPadding(new Insets(5));
 
             for (Double coefficient : constraint.getCoefficients()) {
                 TextField coefficientField = new TextField(coefficient.toString());
@@ -368,9 +369,7 @@ public class AppController {
                 }
             } else {
                 // 减少约束方程
-                for (int i = existingConstraints; i > numConstraints; i--) {
-                    view.getConstraintsBox().getChildren().remove(i); // 从后往前移除多余的行
-                }
+                view.getConstraintsBox().getChildren().subList(numConstraints + 1, existingConstraints + 1).clear();
             }
 
             HBox constraintsBox = (HBox) view.getConstraintsBox().getChildren().get(1);
@@ -387,9 +386,7 @@ public class AppController {
             } else if (existingVariables > numVariables) {
                 for (int i = 1; i <= numConstraints; i++) {
                     HBox equationBox = (HBox) view.getConstraintsBox().getChildren().get(i);
-                    for (int j = existingVariables - 1; j >= numVariables; j--) {
-                        equationBox.getChildren().remove(j);
-                    }
+                    equationBox.getChildren().subList(numVariables, existingVariables).clear();
                 }
             }
 
@@ -410,9 +407,7 @@ public class AppController {
 //                int existingVariables = objectiveFunctionInputBox.getChildren().size();
                 if (existingVariables > numVariables) {
                     // 减少变量输入框
-                    for (int i = existingVariables - 1; i >= numVariables; i--) {
-                        objectiveFunctionInputBox.getChildren().remove(i);
-                    }
+                    objectiveFunctionInputBox.getChildren().subList(numVariables, existingVariables).clear();
                 } else if (existingVariables < numVariables) {
                     for (int i = existingVariables; i < numVariables; i++) {
                         TextField coefficientField = new TextField();
@@ -430,6 +425,7 @@ public class AppController {
     }
 
     private void extractCoefficient() {
+        mathModel.clear();
         try {
             // 提取约束方程的系数和常数项
             for (int i = 1; i <= numConstraints; i++) {
