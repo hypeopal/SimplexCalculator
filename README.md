@@ -71,9 +71,9 @@ $$
 
 The **Simplex Algorithm** is an iterative method used to solve linear programming problems. It operates on a **standard form** of the LP problem and moves from one vertex of the feasible region to an adjacent one in such a way that the objective function is improved (maximized or minimized) at each step.
 
-## Contributing
+## TODO
 
-Contributions are welcome! If you'd like to contribute, please fork the repository and create a pull request with your improvements.
+**There are currently some bugs in this algorithm， especially solving minimum problem** 
 
 ## Acknowledgements
 
